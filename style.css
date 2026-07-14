@@ -1,0 +1,301 @@
+:root{
+  --paper:#F6F2E8;
+  --paper-line:#E6DFCC;
+  --ink:#1C1A16;
+  --ink-soft:#736C5E;
+  --accent:#233A5E;
+  --accent-2:#C0472A;
+  --card:#FFFDF8;
+  --yellow:#F9DF6D;
+  --green:#AADC82;
+  --blue:#B0C4EF;
+  --purple:#BA81C5;
+  --radius:14px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:'Inter',system-ui,sans-serif;
+  color:var(--ink);
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 27px, var(--paper-line) 28px),
+    var(--paper);
+  min-height:100vh;
+  overflow-x:hidden;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#app{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ---------- LOADING / ERROR ---------- */
+.state-msg{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:14px;
+  color:var(--ink-soft);
+  text-align:center;
+  padding:20px;
+}
+
+/* ---------- MENU ---------- */
+.menu-wrap{
+  max-width:920px;
+  margin:0 auto;
+  padding:28px 20px 40px;
+  width:100%;
+}
+.masthead{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  border-bottom:3px solid var(--ink);
+  padding-bottom:10px;
+  margin-bottom:6px;
+}
+.masthead h1{
+  font-family:'Fraunces',serif;
+  font-weight:900;
+  font-size:clamp(28px,5vw,42px);
+  margin:0;
+  letter-spacing:-0.02em;
+}
+.masthead .kicker{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.subtitle{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  color:var(--ink-soft);
+  margin:10px 0 24px;
+  letter-spacing:0.02em;
+}
+.puzzle-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+  gap:14px;
+}
+.puzzle-card{
+  position:relative;
+  background:var(--card);
+  border:1.5px solid var(--ink);
+  border-radius:10px;
+  padding:14px 12px 12px;
+  cursor:pointer;
+  text-align:left;
+  font-family:'Inter',sans-serif;
+  transition:transform .12s ease, box-shadow .12s ease;
+  box-shadow:3px 3px 0 var(--ink);
+}
+.puzzle-card:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+.puzzle-card .num{
+  font-family:'Fraunces',serif;
+  font-weight:700;
+  font-size:26px;
+  line-height:1;
+}
+.puzzle-card .status{
+  margin-top:8px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.04em;
+  color:var(--ink-soft);
+}
+.puzzle-card.solved{
+  background:#EEF6EA;
+  border-color:#3F7D3A;
+}
+.puzzle-card.solved .status{ color:#3F7D3A; font-weight:600; }
+.puzzle-card .dots{
+  position:absolute; top:12px; right:12px;
+  display:flex; gap:3px;
+}
+.puzzle-card .dots span{
+  width:8px; height:8px; border-radius:50%;
+  display:inline-block;
+}
+
+/* ---------- GAME ---------- */
+.game-wrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:14px 16px;
+  max-width:1100px;
+  margin:0 auto;
+  width:100%;
+}
+.game-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+.back-btn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13px;
+  background:none;
+  border:none;
+  color:var(--ink);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 4px;
+}
+.back-btn:before{ content:"←"; font-size:16px; }
+.puzzle-title{
+  font-family:'Fraunces',serif;
+  font-weight:800;
+  font-size:20px;
+}
+.fs-btn{
+  border:1.5px solid var(--ink);
+  background:var(--card);
+  border-radius:50%;
+  width:40px; height:40px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  font-size:16px;
+}
+
+.game-body{
+  display:flex;
+  gap:18px;
+  flex:1;
+  min-height:0;
+}
+.board-col{
+  flex:2.1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(4,1fr);
+  gap:8px;
+  flex:1;
+  min-height:280px;
+}
+.tile{
+  background:var(--card);
+  border:1.5px solid var(--ink);
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-weight:800;
+  font-family:'Inter',sans-serif;
+  padding:6px;
+  cursor:pointer;
+  line-height:1.1;
+  transition:transform .08s ease, background .12s ease, color .12s ease;
+}
+.tile:active{ transform:scale(0.96); }
+.tile.selected{ background:var(--ink); color:#fff; border-color:var(--ink); }
+.tile.hint{ background:var(--yellow); border-color:#a8890a; }
+
+.sidebar{
+  flex:1.05;
+  display:flex;
+  flex-direction:column;
+  min-width:220px;
+}
+.solved-card{
+  border-radius:10px;
+  padding:8px 10px;
+  margin-bottom:8px;
+  border:1.5px solid var(--ink);
+}
+.solved-card .cat-title{
+  font-weight:800;
+  font-size:13px;
+  font-family:'IBM Plex Mono',monospace;
+  letter-spacing:0.03em;
+}
+.solved-card .cat-words{
+  font-size:13px;
+  margin-top:2px;
+}
+.status-card{
+  background:var(--card);
+  border:1.5px solid var(--paper-line);
+  border-radius:10px;
+  padding:10px;
+  margin:6px 0;
+  text-align:center;
+}
+.status-card .msg{ font-weight:700; font-size:15px; }
+.status-card .msg.away{ color:var(--accent-2); }
+.status-card .hint-text{
+  margin-top:6px;
+  padding-top:6px;
+  border-top:1px solid var(--paper-line);
+  font-size:13px;
+  color:#5C3D8F;
+  font-style:italic;
+}
+.counters{
+  display:flex;
+  gap:14px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  margin:4px 0 10px;
+}
+.counters .err{ color:var(--accent-2); }
+.counters .hnt{ color:#5C3D8F; }
+
+.btn{
+  font-family:'Inter',sans-serif;
+  font-weight:700;
+  font-size:15px;
+  border-radius:10px;
+  border:1.5px solid var(--ink);
+  padding:12px;
+  cursor:pointer;
+  width:100%;
+  margin-bottom:8px;
+  background:var(--card);
+  color:var(--ink);
+}
+.btn:disabled{ opacity:0.35; cursor:not-allowed; }
+.btn.primary{ background:var(--ink); color:#fff; }
+.btn.hint-btn{ background:#5C3D8F; color:#fff; border-color:#5C3D8F; }
+.btn-row{ display:flex; gap:8px; }
+.btn-row .btn{ flex:1; }
+
+.win-screen{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:14px;
+}
+.win-screen h2{
+  font-family:'Fraunces',serif;
+  font-size:36px;
+  color:#2E7D32;
+  margin:0;
+}
+.win-screen p{ font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--ink-soft); }
+
+@media (max-width: 720px){
+  .game-body{ flex-direction:column; }
+  .grid{ min-height:340px; }
+}
