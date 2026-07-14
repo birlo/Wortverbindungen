@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>4×4 Wortverbindung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F6F2E8;
+    --paper-line:#E6DFCC;
+    --ink:#1C1A16;
+    --ink-soft:#736C5E;
+    --accent:#233A5E;
+    --accent-2:#C0472A;
+    --card:#FFFDF8;
+    --yellow:#F9DF6D;
+    --green:#AADC82;
+    --blue:#B0C4EF;
+    --purple:#BA81C5;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, var(--paper-line) 28px),
+      var(--paper);
+    min-height:100vh;
+    overflow-x:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  #app{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---------- MENU ---------- */
+  .menu-wrap{
+    max-width:920px;
+    margin:0 auto;
+    padding:28px 20px 40px;
+    width:100%;
+  }
+  .masthead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:10px;
+    margin-bottom:6px;
+  }
+  .masthead h1{
+    font-family:'Fraunces',serif;
+    font-weight:900;
+    font-size:clamp(28px,5vw,42px);
+    margin:0;
+    letter-spacing:-0.02em;
+  }
+  .masthead .kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .subtitle{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:10px 0 24px;
+    letter-spacing:0.02em;
+  }
+  .puzzle-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+    gap:14px;
+  }
+  .puzzle-card{
+    position:relative;
+    background:var(--card);
+    border:1.5px solid var(--ink);
+    border-radius:10px;
+    padding:14px 12px 12px;
+    cursor:pointer;
+    text-align:left;
+    font-family:'Inter',sans-serif;
+    transition:transform .12s ease, box-shadow .12s ease;
+    box-shadow:3px 3px 0 var(--ink);
+  }
+  .puzzle-card:active{ transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink); }
+  .puzzle-card .num{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:26px;
+    line-height:1;
+  }
+  .puzzle-card .status{
+    margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.04em;
+    color:var(--ink-soft);
+  }
+  .puzzle-card.solved{
+    background:#EEF6EA;
+    border-color:#3F7D3A;
+  }
+  .puzzle-card.solved .status{ color:#3F7D3A; font-weight:600; }
+  .puzzle-card .dots{
+    position:absolute; top:12px; right:12px;
+    display:flex; gap:3px;
+  }
+  .puzzle-card .dots span{
+    width:8px; height:8px; border-radius:50%;
+    display:inline-block;
+  }
+
+  /* ---------- GAME ---------- */
+  .game-wrap{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    padding:14px 16px;
+    max-width:1100px;
+    margin:0 auto;
+    width:100%;
+  }
+  .game-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .back-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    background:none;
+    border:none;
+    color:var(--ink);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 4px;
+  }
+  .back-btn:before{ content:"←"; font-size:16px; }
+  .puzzle-title{
+    font-family:'Fraunces',serif;
+    font-weight:800;
+    font-size:20px;
+  }
+  .fs-btn{
+    border:1.5px solid var(--ink);
+    background:var(--card);
+    border-radius:50%;
+    width:40px; height:40px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:16px;
+  }
+
+  .game-body{
+    display:flex;
+    gap:18px;
+    flex:1;
+    min-height:0;
+  }
+  .board-col{
+    flex:2.1;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    grid-template-rows:repeat(4,1fr);
+    gap:8px;
+    flex:1;
+    min-height:280px;
+  }
+  .tile{
+    background:var(--card);
+    border:1.5px solid var(--ink);
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-weight:800;
+    font-family:'Inter',sans-serif;
+    padding:6px;
+    cursor:pointer;
+    line-height:1.1;
+    transition:transform .08s ease, background .12s ease, color .12s ease;
+  }
+  .tile:active{ transform:scale(0.96); }
+  .tile.selected{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .tile.hint{ background:var(--yellow); border-color:#a8890a; }
+
+  .sidebar{
+    flex:1.05;
+    display:flex;
+    flex-direction:column;
+    min-width:220px;
+  }
+  .solved-card{
+    border-radius:10px;
+    padding:8px 10px;
+    margin-bottom:8px;
+    border:1.5px solid var(--ink);
+  }
+  .solved-card .cat-title{
+    font-weight:800;
+    font-size:13px;
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.03em;
+  }
+  .solved-card .cat-words{
+    font-size:13px;
+    margin-top:2px;
+  }
+  .status-card{
+    background:var(--card);
+    border:1.5px solid var(--paper-line);
+    border-radius:10px;
+    padding:10px;
+    margin:6px 0;
+    text-align:center;
+  }
+  .status-card .msg{ font-weight:700; font-size:15px; }
+  .status-card .msg.away{ color:var(--accent-2); }
+  .status-card .hint-text{
+    margin-top:6px;
+    padding-top:6px;
+    border-top:1px solid var(--paper-line);
+    font-size:13px;
+    color:#5C3D8F;
+    font-style:italic;
+  }
+  .counters{
+    display:flex;
+    gap:14px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    margin:4px 0 10px;
+  }
+  .counters .err{ color:var(--accent-2); }
+  .counters .hnt{ color:#5C3D8F; }
+
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    border-radius:10px;
+    border:1.5px solid var(--ink);
+    padding:12px;
+    cursor:pointer;
+    width:100%;
+    margin-bottom:8px;
+    background:var(--card);
+    color:var(--ink);
+  }
+  .btn:disabled{ opacity:0.35; cursor:not-allowed; }
+  .btn.primary{ background:var(--ink); color:#fff; }
+  .btn.hint-btn{ background:#5C3D8F; color:#fff; border-color:#5C3D8F; }
+  .btn-row{ display:flex; gap:8px; }
+  .btn-row .btn{ flex:1; }
+
+  .win-screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:14px;
+  }
+  .win-screen h2{
+    font-family:'Fraunces',serif;
+    font-size:36px;
+    color:#2E7D32;
+    margin:0;
+  }
+  .win-screen p{ font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--ink-soft); }
+
+  @media (max-width: 720px){
+    .game-body{ flex-direction:column; }
+    .grid{ min-height:340px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------------- Puzzle data (aus puzzles.csv) ---------------- */
+const RAW_CSV = `
+1;OBST;APFEL,BIRNE,BANANE,PFIRSICH;F9DF6D;0;Dinge, die man essen kann und an Bäumen oder Sträuchern wachsen.
+1;WETTER;REGEN,SONNE,WIND,SCHNEE;AADC82;1;Phänomene, die man draußen am Himmel beobachten kann.
+1;MÖBEL;STUHL,TISCH,SOFA,REGAL;B0C4EF;2;Gegenstände, die man zur Einrichtung einer Wohnung nutzt.
+1;____-WORT;ANT,STICH,VOR,GEGEN;BA81C5;3;Vorsilben, die man vor einen bestimmten Begriff setzen kann.
+2;FARBEN;ROT,BLAU,GRÜN,GELB;F9DF6D;0;Eigenschaften, die das Aussehen von Objekten beschreiben.
+2;TIERE;HUND,KATZE,MAUS,PFERD;AADC82;1;Lebewesen, die oft als Haustiere oder Nutztiere gehalten werden.
+2;KÜCHE;MESSER,GABEL,LÖFFEL,TELLER;B0C4EF;2;Dinge, die man zum Essen oder Zubereiten von Speisen benötigt.
+2;____-KARTE;LAND,KREDIT,POST,SPIEL;BA81C5;3;Wörter, die zusammen mit einem rechteckigen Papier- oder Plastikobjekt Sinn ergeben.
+3;MUSIKINSTRUMENTE;KLAVIER,GEIGE,FLÖTE,GITARRE;F9DF6D;0;Gegenstände, auf denen man Melodien spielen kann.
+3;BAUMTEILE;BLATT,WURZEL,STAMM,ZWEIG;AADC82;1;Die verschiedenen Komponenten eines großen Gewächses.
+3;TASTATUR;ENTER,SHIFT,STRG,ALT;B0C4EF;2;Tasten, die man auf einem Computer-Eingabegerät findet.
+3;GEFLÜGELT;ADLER,FLIEGE,ENGEL,FLUGZEUG;BA81C5;3;Dinge oder Wesen, die Flügel besitzen.
+4;KARTENFARBEN;HERZ,PIK,KREUZ,KARO;F9DF6D;0;Die vier Symbole in einem französischen Kartenspiel.
+4;MÜNZEN;CENT,EURO,DOLLAR,YEN;AADC82;1;Einheiten von Hartgeld in verschiedenen Währungen.
+4;MAẞEINHEITEN;METER,LITER,GRAMM,VOLT;B0C4EF;2;Standardisierte Größen zum Messen von physikalischen Eigenschaften.
+4;SCHARF;MESSER,CHILI,VERSTAND,BLICK;BA81C5;3;Dinge, die schneiden können oder im übertragenen Sinne intensiv sind.
+5;PLANETEN;ERDE,NEPTUN,URANUS,SATURN;F9DF6D;0;Himmelskörper in unserem Sonnensystem (Ohne Götter-Dopplung).
+5;RÖM. GÖTTER;MARS,VENUS,JUPITER,MERKUR;AADC82;1;Gottheiten der Antike (Achtung: Auch Planeten oder Metalle!).
+5;SCHOKORIEGEL;BOUNTY,SNICKERS,TWIX,MILKY WAY;B0C4EF;2;Beliebte Süßwaren (Wo ist der Mars?).
+5;METALLE;GOLD,SILBER,EISEN,KUPFER;BA81C5;3;Elemente mit hoher Leitfähigkeit (Vorsicht bei Merkur/Quecksilber).
+6;PIZZA-BELAG;SALAMI,PILZE,KÄSE,ZWIEBEL;F9DF6D;0;Zutaten, die man häufig auf einen italienischen Teigfladen legt.
+6;BRETTSPIELE;SCHACH,DAME,MÜHLE,HALMA;AADC82;1;Klassische Spiele, die auf einem Brett ausgetragen werden.
+6;PERIODENSYSTEM;HELIUM,NEON,ARGON,KRYPTON;B0C4EF;2;Edelgase, die für ihre Reaktionsträgheit bekannt sind.
+6;____-FALL;REGEN,WASSER,STERN,ERNST;BA81C5;3;Wörter, die in Kombination mit 'Fall' einen neuen Begriff bilden.
+7;FRÜCHTE;BIRNE,KIRSCHE,BANANE,ZITRONE;F9DF6D;0;Essbare Pflanzenteile (Vorsicht mit dem Apfel).
+7;PROG-SPRACHEN;KOTLIN,SWIFT,RUST,GO;AADC82;1;Moderne Sprachen für Softwareentwicklung (Achtung: Python/Java fehlen).
+7;TECH-FIRMEN;APPLE,GOOGLE,META,AMAZON;B0C4EF;2;Giganten der digitalen Industrie.
+7;SCHLANGEN;PYTHON,VIPER,MAMBA,KOBRA;BA81C5;3;Reptilien ohne Beine (Python ist auch eine Sprache).
+8;FARBEN (DE);WEIẞ,SCHWARZ,GRAU,BRAUN;F9DF6D;0;Grundfarben zur Beschreibung von Objekten.
+8;AUTOMARKEN;VW,BMW,AUDI,MERCEDES;AADC82;1;Bekannte Hersteller von Kraftfahrzeugen aus Deutschland.
+8;PASTASORTEN;SPAGHETTI,PENNE,FUSILLI,LASAGNE;B0C4EF;2;Verschiedene Formen von italienischen Teigwaren.
+8;WERKZEUGE;HAMMER,ZANGE,BOHRER,FEILE;BA81C5;3;Gegenstände, die man zum Heimwerken oder Reparieren nutzt.
+9;STOFFE;SEIDE,WOLLE,LEINEN,BAUMWOLLE;F9DF6D;0;Materialien, aus denen Kleidung hergestellt wird.
+9;KÜCHENGERÄTE;MIXER,TOASTER,HERD,WAAGE;AADC82;1;Elektrische Helfer bei der Speisenzubereitung.
+9;STERNZEICHEN;LÖWE,STIER,WAAGE,WIDDER;B0C4EF;2;Astrologische Symbole basierend auf dem Geburtsdatum.
+9;GRIECHISCHE GÖTTER;ZEUS,HERA,APOLLO,ATHENE;BA81C5;3;Mächtige Wesen aus der antiken Mythologie.
+10;ZEITEINHEITEN;SEKUNDE,MINUTE,STUNDE,TAG;F9DF6D;0;Maße zur Einteilung der Zeitdauer.
+10;GEOMETRIE;PUNKT,LINIE,KREIS,DREIECK;AADC82;1;Grundelemente der mathematischen Formenlehre.
+10;KARTENSPIELE;POKER,MAU-MAU,SKAT,BRIDGE;B0C4EF;2;Spiele, die mit einem Satz Karten gespielt werden.
+10;KAFFEE;ESPRESSO,LATTE,CAPPUCCINO,MOCHA;BA81C5;3;Verschiedene Arten der Zubereitung eines beliebten Heißgetränks.
+11;MYTHISCHE WESEN;DRACHE,EINHORN,PHÖNIX,ZENTAUR;F9DF6D;0;Sagenumwobene Kreaturen aus Legenden.
+11;NATURELEMENTE;FEUER,WASSER,ERDE,LUFT;AADC82;1;Die vier klassischen Elemente der Naturlehre.
+11;BUCHTEILE;COVER,SEITE,KAPITEL,INDEX;B0C4EF;2;Die strukturellen Bestandteile eines gedruckten Werks.
+11;SCHREIBGERÄTE;STIFT,FEDER,PINSEL,KREIDE;BA81C5;3;Werkzeuge, mit denen man Zeichen auf Oberflächen bringt.
+`.trim();
+
+function parsePuzzles(csv){
+  const map = {};
+  csv.split("\n").forEach(line => {
+    if(!line.trim()) return;
+    const parts = line.split(";");
+    if(parts.length < 6) return;
+    const id = parseInt(parts[0],10);
+    const title = parts[1];
+    const words = parts[2].split(",").map(w=>w.trim());
+    const color = "#" + parts[3];
+    const difficulty = parseInt(parts[4],10);
+    const hint = parts[5];
+    if(!map[id]) map[id] = [];
+    map[id].push({title, words, color, difficulty, hint});
+  });
+  return Object.keys(map).map(id => ({id:parseInt(id,10), categories:map[id]})).sort((a,b)=>a.id-b.id);
+}
+
+const PUZZLES = parsePuzzles(RAW_CSV);
+
+/* ---------------- State ---------------- */
+let screen = "menu";
+let progress = {}; // id -> {solved, errors, hints}
+let gs = null; // game state
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startGame(puzzle){
+  gs = {
+    puzzle,
+    allWords: shuffle(puzzle.categories.flatMap(c=>c.words)),
+    selected: new Set(),
+    solved: [],
+    errors: 0,
+    hintsUsed: 0,
+    status: "Finde 4 Gruppen!",
+    oneAway: false,
+    oneAwayTimer: null,
+    hintLevel: 0,
+    targetHintCat: null,
+    hintedWords: new Set(),
+    activeHintSentence: null,
+    fullScreen: false
+  };
+  screen = "game";
+  render();
+}
+
+function remainingWords(){
+  return gs.allWords.filter(w => !gs.solved.some(c => c.words.includes(w)));
+}
+
+function toggleWord(word){
+  if(gs.selected.has(word)) gs.selected.delete(word);
+  else if(gs.selected.size < 4) gs.selected.add(word);
+  render();
+}
+
+function checkSelection(){
+  const sel = gs.selected;
+  const match = gs.puzzle.categories.find(c => c.words.length===sel.size && c.words.every(w=>sel.has(w)));
+  if(match){
+    gs.solved.push(match);
+    gs.selected = new Set();
+    gs.status = "Richtig!";
+    gs.oneAway = false;
+    if(match === gs.targetHintCat){
+      gs.targetHintCat = null;
+      gs.hintLevel = 0;
+      gs.hintedWords = new Set();
+      gs.activeHintSentence = null;
+    }
+    if(gs.solved.length === 4){
+      progress[gs.puzzle.id] = {solved:true, errors:gs.errors, hints:gs.hintsUsed};
+    }
+  } else {
+    const remaining = gs.puzzle.categories.filter(c => !gs.solved.includes(c));
+    const closeMatch = remaining.some(c => c.words.filter(w=>sel.has(w)).length === 3);
+    gs.errors++;
+    gs.status = "Leider falsch";
+    gs.oneAway = closeMatch;
+    if(gs.oneAwayTimer) clearTimeout(gs.oneAwayTimer);
+    if(closeMatch){
+      gs.oneAwayTimer = setTimeout(()=>{ gs.oneAway=false; render(); }, 2000);
+    }
+  }
+  render();
+}
+
+function shuffleWords(){
+  const rem = remainingWords();
+  const solvedWords = gs.allWords.filter(w=>!rem.includes(w));
+  gs.allWords = [...shuffle(rem), ...solvedWords];
+  render();
+}
+
+function clearSelection(){
+  gs.selected = new Set();
+  render();
+}
+
+function useHint(){
+  gs.hintsUsed++;
+  if(!gs.targetHintCat){
+    const remaining = gs.puzzle.categories.filter(c=>!gs.solved.includes(c));
+    gs.targetHintCat = remaining[Math.floor(Math.random()*remaining.length)];
+  }
+  gs.hintLevel++;
+  const rem = remainingWords();
+  if(gs.hintLevel === 1){
+    gs.activeHintSentence = gs.targetHintCat.hint;
+  } else if(gs.hintLevel === 2){
+    const cand = gs.targetHintCat.words.filter(w=>rem.includes(w));
+    if(cand.length) gs.hintedWords.add(cand[Math.floor(Math.random()*cand.length)]);
+  } else if(gs.hintLevel === 3){
+    const cand = gs.targetHintCat.words.filter(w=>rem.includes(w) && !gs.hintedWords.has(w));
+    if(cand.length) gs.hintedWords.add(cand[Math.floor(Math.random()*cand.length)]);
+  }
+  gs.status = "Hinweis erhalten!";
+  render();
+}
+
+function backToMenu(){
+  screen = "menu";
+  gs = null;
+  render();
+}
+
+/* ---------------- Rendering ---------------- */
+const app = document.getElementById("app");
+
+function render(){
+  app.innerHTML = "";
+  if(screen === "menu") renderMenu();
+  else renderGame();
+}
+
+function renderMenu(){
+  const wrap = document.createElement("div");
+  wrap.className = "menu-wrap";
+
+  wrap.innerHTML = `
+    <div class="masthead">
+      <h1>4×4 Wortverbindung</h1>
+      <span class="kicker">Web-Edition</span>
+    </div>
+    <div class="subtitle">${PUZZLES.length} Rätsel · Wähle eins, um zu starten</div>
+    <div class="puzzle-grid" id="grid"></div>
+  `;
+  app.appendChild(wrap);
+
+  const grid = wrap.querySelector("#grid");
+  PUZZLES.forEach(p => {
+    const res = progress[p.id];
+    const card = document.createElement("button");
+    card.className = "puzzle-card" + (res && res.solved ? " solved" : "");
+    card.innerHTML = `
+      <div class="dots">${p.categories.map(c=>`<span style="background:${c.color}"></span>`).join("")}</div>
+      <div class="num">${String(p.id).padStart(2,"0")}</div>
+      <div class="status">${res && res.solved ? `${res.errors} Fehler · ${res.hints} Hinweise` : "Offen"}</div>
+    `;
+    card.onclick = () => startGame(p);
+    grid.appendChild(card);
+  });
+}
+
+function renderGame(){
+  const rem = remainingWords();
+  const won = gs.solved.length === 4;
+
+  const wrap = document.createElement("div");
+  wrap.className = "game-wrap";
+
+  wrap.innerHTML = `
+    <div class="game-header">
+      <button class="back-btn" id="backBtn">Menü</button>
+      <div class="puzzle-title">Rätsel ${String(gs.puzzle.id).padStart(2,"0")}</div>
+      <button class="fs-btn" id="fsBtn">${gs.fullScreen ? "⤡" : "⤢"}</button>
+    </div>
+    <div class="game-body" id="body"></div>
+  `;
+  app.appendChild(wrap);
+
+  wrap.querySelector("#backBtn").onclick = backToMenu;
+  wrap.querySelector("#fsBtn").onclick = () => { gs.fullScreen = !gs.fullScreen; render(); };
+
+  const body = wrap.querySelector("#body");
+
+  if(won){
+    body.innerHTML = `
+      <div class="win-screen">
+        <h2>Hervorragend!</h2>
+        <p>Rätsel gelöst mit ${gs.errors} Fehlern und ${gs.hintsUsed} Hinweisen.</p>
+      </div>
+    `;
+    const btn = document.createElement("button");
+    btn.className = "btn primary";
+    btn.style.maxWidth = "280px";
+    btn.textContent = "Zurück zum Menü";
+    btn.onclick = backToMenu;
+    body.querySelector(".win-screen").appendChild(btn);
+    return;
+  }
+
+  const boardCol = document.createElement("div");
+  boardCol.className = "board-col";
+  const gridEl = document.createElement("div");
+  gridEl.className = "grid";
+  rem.forEach(word => {
+    const tile = document.createElement("div");
+    tile.className = "tile" +
+      (gs.selected.has(word) ? " selected" : "") +
+      (gs.hintedWords.has(word) ? " hint" : "");
+    const len = word.length;
+    tile.style.fontSize = len > 10 ? "14px" : len > 8 ? "16px" : "19px";
+    tile.textContent = word;
+    tile.onclick = () => toggleWord(word);
+    gridEl.appendChild(tile);
+  });
+  boardCol.appendChild(gridEl);
+
+  if(gs.fullScreen){
+    const checkBtn = document.createElement("button");
+    checkBtn.className = "btn primary";
+    checkBtn.style.marginTop = "10px";
+    checkBtn.textContent = "Prüfen";
+    checkBtn.disabled = gs.selected.size !== 4;
+    checkBtn.onclick = checkSelection;
+    boardCol.appendChild(checkBtn);
+    body.appendChild(boardCol);
+    return;
+  }
+
+  body.appendChild(boardCol);
+
+  const sidebar = document.createElement("div");
+  sidebar.className = "sidebar";
+
+  gs.solved.slice().sort((a,b)=>a.difficulty-b.difficulty).forEach(cat => {
+    const card = document.createElement("div");
+    card.className = "solved-card";
+    card.style.background = cat.color;
+    card.innerHTML = `<div class="cat-title">${cat.title}</div><div class="cat-words">${cat.words.join(", ")}</div>`;
+    sidebar.appendChild(card);
+  });
+
+  const statusCard = document.createElement("div");
+  statusCard.className = "status-card";
+  statusCard.innerHTML = `
+    <div class="msg${gs.oneAway ? " away" : ""}">${gs.oneAway ? "Eins fehlt noch!" : gs.status}</div>
+    ${gs.activeHintSentence ? `<div class="hint-text">${gs.activeHintSentence}</div>` : ""}
+  `;
+  sidebar.appendChild(statusCard);
+
+  const counters = document.createElement("div");
+  counters.className = "counters";
+  counters.innerHTML = `<span class="err">Fehler: ${gs.errors}</span><span class="hnt">Hinweise: ${gs.hintsUsed}</span>`;
+  sidebar.appendChild(counters);
+
+  const checkBtn = document.createElement("button");
+  checkBtn.className = "btn primary";
+  checkBtn.textContent = "Prüfen";
+  checkBtn.disabled = gs.selected.size !== 4;
+  checkBtn.onclick = checkSelection;
+  sidebar.appendChild(checkBtn);
+
+  const row = document.createElement("div");
+  row.className = "btn-row";
+  const shuffleBtn = document.createElement("button");
+  shuffleBtn.className = "btn";
+  shuffleBtn.textContent = "Mischen";
+  shuffleBtn.onclick = shuffleWords;
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "btn";
+  clearBtn.textContent = "Leeren";
+  clearBtn.onclick = clearSelection;
+  row.appendChild(shuffleBtn);
+  row.appendChild(clearBtn);
+  sidebar.appendChild(row);
+
+  const hintBtn = document.createElement("button");
+  hintBtn.className = "btn hint-btn";
+  hintBtn.textContent = "Hinweis";
+  hintBtn.onclick = useHint;
+  sidebar.appendChild(hintBtn);
+
+  body.appendChild(sidebar);
+}
+
+render();
+</script>
+</body>
+</html>
