@@ -203,8 +203,11 @@ function renderGame(){
 
   const body = wrap.querySelector("#body");
 
+  const boardCol = document.createElement("div");
+  boardCol.className = "board-col";
+
   if(won){
-    body.innerHTML = `
+    boardCol.innerHTML = `
       <div class="win-screen">
         <h2>Hervorragend!</h2>
         <p>Rätsel gelöst mit ${gs.errors} Fehlern und ${gs.hintsUsed} Hinweisen.</p>
@@ -215,12 +218,23 @@ function renderGame(){
     btn.style.maxWidth = "280px";
     btn.textContent = "Zurück zum Menü";
     btn.onclick = backToMenu;
-    body.querySelector(".win-screen").appendChild(btn);
+    boardCol.querySelector(".win-screen").appendChild(btn);
+    body.appendChild(boardCol);
+
+    // Seitenleiste zeigt weiterhin alle vier gelösten Kategorien, inkl. der letzten
+    const sidebar = document.createElement("div");
+    sidebar.className = "sidebar";
+    gs.solved.slice().sort((a,b)=>a.difficulty-b.difficulty).forEach(cat => {
+      const card = document.createElement("div");
+      card.className = "solved-card";
+      card.style.background = cat.color;
+      card.innerHTML = `<div class="cat-title">${cat.title}</div><div class="cat-words">${cat.words.join(", ")}</div>`;
+      sidebar.appendChild(card);
+    });
+    body.appendChild(sidebar);
     return;
   }
 
-  const boardCol = document.createElement("div");
-  boardCol.className = "board-col";
   const gridEl = document.createElement("div");
   gridEl.className = "grid";
   rem.forEach(word => {
